@@ -38,7 +38,7 @@ def visualize_data(df):
 
 # Função principal
 def main():
-    filename = 'sales_data.csv'  
+    filename = './Arquivo/sales_data.csv'  
     df = load_data(filename)
     df = clean_data(df)
     analyze_data(df)
