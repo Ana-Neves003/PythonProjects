@@ -48,8 +48,13 @@ def jogo():
 
         while game_close == True:
             tela.fill(branco)
-            mensagem = fonte.render("Game Over! Pressione C para jogar novamente ou Q para sair.", True, vermelho)
-            tela.blit(mensagem, [largura / 6, altura / 3])
+            mensagem1 = fonte.render("Game Over!", True, vermelho)
+            mensagem2 = fonte.render("Pressione C para reiniciar ou Q para sair.", True, vermelho)
+            pos_x1 = (largura - mensagem1.get_width()) / 2
+            pos_x2 = (largura - mensagem2.get_width()) / 2
+            tela.blit(mensagem1, [pos_x1, altura / 3])
+            tela.blit(mensagem2, [pos_x2, altura / 3 + 30])
+    
             mostrar_pontuacao(comprimento_cobra - 1)
             pygame.display.update()
 
