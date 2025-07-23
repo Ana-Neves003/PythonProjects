@@ -21,5 +21,7 @@ try:
         while True:
             data, addr = sock.recvfrom(4096)
             f.write(data)
-except Exception as e:
-    print(f"[ERRO] Durante a execução: {e}")
+except KeyboardInterrupt:
+    print("\n[DEBUG] Encerrando recepção com Ctrl+C.")
+finally:
+    sock.close()
