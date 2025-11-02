@@ -72,7 +72,8 @@ def fir_filter(signal, coefficients):
     return y
 
 # === Leitura e conversão do sinal PDM ===
-filename = 'sinais/dados_recebidos_sinais.RAW'
+#filename = 'sinais/dados_recebidos_10s.RAW'
+filename = 'sinais/dados_recebidos_TCP.RAW'
 with open(filename, 'rb') as f:
     data = np.fromfile(f, dtype=np.uint32)
 

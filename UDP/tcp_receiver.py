@@ -6,6 +6,7 @@ import signal
 TCP_IP = "0.0.0.0" 
 TCP_PORT = 12345
 ARQUIVO_RAW = "dados_recebidos_TCP.raw"
+#ARQUIVO_RAW = "dados_recebidos_TCP_FILT.raw"
 #BUFFER_SIZE = 4096
 BUFFER_SIZE = 65536
 FLUSH_LIMIT = 1 * 1024 * 1024   # 1 MB acumulado antes de gravar no disco
@@ -15,7 +16,8 @@ print("[DEBUG] Criando socket TCP...")
 #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #UDP
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #TCP
 #server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
-server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 262144)
+#server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 262144)
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1048576)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 

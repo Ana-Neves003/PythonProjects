@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>FFT em tempo real</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!--
+  <style>
+    body { background: #121212; color: white; text-align: center; font-family: Arial; }
+    canvas { width: 90%; height: 60vh; margin-top: 20px; }
+  </style>
+  -->
+  <style>
+    body {
+      background-color: #d9d9d9; 
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .linha {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px; /* espaço entre os gráficos */
+    }
+
+    .grafico-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* margin: 10px 0; */
+    }
+
+    canvas {
+      background-color: #ffffff;
+      border: 1px solid #888;
+      border-radius: 6px;
+      width: 600px;   
+      height: 300px;
+    }
+
+    button {
+      margin-top: 6px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: #007acc;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <div class="linha">
+    <div class="grafico-container">
+      <canvas id="grafico1"></canvas>
+      <button onclick="baixarBruto()">Baixar sinal bruto (.raw)</button>
+    </div>
+
+    <div class="grafico-container">
+      <canvas id="grafico2"></canvas>
+      <button onclick="baixarFiltrado()">Baixar sinal filtrado (.raw)</button>
+    </div>
+  </div>
+
+  <script>
+
+    const ctx1 = document.getElementById('grafico1').getContext('2d');
+    const ctx2 = document.getElementById('grafico2').getContext('2d');
+
+    /*const ctx = document.getElementById('grafico1').getContext('2d');*/
+    const chart = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'FFT (sinal bruto)',
+          data: [],
+          borderColor: 'blue',
+          borderWidth: 1,
+          pointRadius: 0,
+        }]
+      },
+      options: {
+        responsive: false,
+        animation: false,
+        scales: {
+          x: { type: 'logarithmic', title: { display: true, text: 'Frequência (Hz)' } },
+          y: { title: { display: true, text: 'Magnitude' } }
+          
+          /*
+          x: { title: { display: true, text: 'Frequência (Hz)' } },
+          y: { title: { display: true, text: 'Magnitude (dB)' } }
+          */
+        }
+      }
+    });
+
+    /*const ctx2 = document.getElementById('grafico2').getContext('2d');*/
+    const chart2 = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'FFT (filtrado)',
+          data: [],
+          borderColor: 'red',
+          borderWidth: 1,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: false,
+        animation: false,
+        scales: {
+          x: { title: { display: true, text: 'Frequência (Hz)' } },
+          y: { title: { display: true, text: 'Magnitude (dB)' } }
+        }
+      }
+    });
+
+    async function atualizar() {
+      const resp = await fetch('/dados_fft');
+      if (!resp.ok) return;
+      const { freq, spec } = await resp.json();
+      /* 
+      chart.data.labels = freq;
+      chart.data.datasets[0].data = spec.map(v => 10 * Math.log10(v + 1e-12));
+      chart.update();
+      */
+      chart.data.labels = freq;
+      chart.data.datasets[0].data = spec;
+      //chart.data.datasets[0].data = freq.map((x, i) => ({ x, y: spec[i] }));
+      chart.update()
+    }
+
+    setInterval(atualizar, 1000);
+
+    // Botões de download
+    async function baixarBruto() {
+      const resp = await fetch('/dados_fft');
+      if (!resp.ok) {
+        alert("Erro ao obter dados!");
+        return;
+      }
+      const { spec } = await resp.json();
+      const buffer = new Float32Array(spec);
+      const blob = new Blob([buffer.buffer], { type: 'application/octet-stream' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'sinal_bruto.raw';
+      link.click();
+    }
+
+    function baixarFiltrado() {
+      alert("Ainda não implementado.");
+    }
+
+  </script>
+
+</body>
+</html>
