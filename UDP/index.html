@@ -136,25 +136,50 @@
       const data = await resp.json();
 
       // Verifica se há dados
-      //if (!data.freq_bruto || data.freq_bruto.length === 0) return;
-      //if (!data.freq_filtrado || data.freq_filtrado.length === 0) return;
 
       if (!data.freq_bruto?.length || !data.freq_filtrado?.length) return;
 
-      /* 
-      chart.data.labels = freq;
-      chart.data.datasets[0].data = spec.map(v => 10 * Math.log10(v + 1e-12));
-      chart.update();
-      */
-
       // Gráfico 1 - bruto
-      chart1.data.labels = data.freq_bruto;
-      chart1.data.datasets[0].data = data.spec_bruto;
+      //chart1.data.labels = data.freq_bruto;
+      //chart1.data.datasets[0].data = data.spec_bruto;
+      //chart1.update();
+
+      if (!chart1.data.datasets[0].data.length) {
+        chart1.data.labels = data.freq_bruto;
+        chart1.data.datasets[0].data = data.spec_bruto;
+      } 
+      else {
+        for (let i = 0; i < data.spec_bruto.length; i++) {
+          chart1.data.datasets[0].data[i] = Math.max(
+          chart1.data.datasets[0].data[i],
+          data.spec_bruto[i]
+          );
+          
+        }
+      }
+
       chart1.update();
+      //---------------------------------------------------------------------------------------
 
       // Gráfico 2 - filtrado
-      chart2.data.labels = data.freq_filtrado;
-      chart2.data.datasets[0].data = data.spec_filtrado;
+      //chart2.data.labels = data.freq_filtrado;
+      //chart2.data.datasets[0].data = data.spec_filtrado;
+      //chart2.update();
+
+      if (!chart2.data.datasets[0].data.length) {
+        chart2.data.labels = data.freq_filtrado;
+        chart2.data.datasets[0].data = data.spec_filtrado;
+      } 
+      else {
+        for (let i = 0; i < data.spec_filtrado.length; i++) {
+          chart2.data.datasets[0].data[i] = Math.max(
+          chart2.data.datasets[0].data[i],
+          data.spec_filtrado[i]
+          );
+          
+        }
+      }
+
       chart2.update();
     }
 
