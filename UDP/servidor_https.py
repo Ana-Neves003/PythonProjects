@@ -12,6 +12,9 @@ buffer_dados = b""
 freq_bruto = mag_bruto = freq_filtrado = mag_filtrado = None
 
 
+# CONTADOR DE PACOTES
+pacotes_recebidos = 0
+bytes_recebidos = 0
 
 HTTPServer.last_fft = ([], [])
 
@@ -70,12 +73,19 @@ class MyHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         global buffer_dados, freq_atual, mag_atual
+        global pacotes_recebidos, bytes_recebidos
 
         if self.path == "/upload":
-            MIN_AMOSTRAS = 131072 # 65536 mínimo para FFT
+            #MIN_AMOSTRAS = 131072 
+            MIN_AMOSTRAS = 4096 * 4 
             content_length = int(self.headers['Content-Length'])
             data = self.rfile.read(content_length)
             #print(f"Recebido {len(data)} bytes de dados.")
+
+            # CONTADOR DE PACOTE
+            pacotes_recebidos += 1
+            bytes_recebidos += len(data)
+            print(f"[{pacotes_recebidos}] Pacote recebido com {len(data)} bytes (Total: {bytes_recebidos} bytes)")
 
             # --- Acumula os dados recebidos ---
             buffer_dados += data
