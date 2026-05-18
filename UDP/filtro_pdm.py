@@ -48,13 +48,6 @@ def cic_filter(signal: np.ndarray, R: int, N: int, M: int = 1) -> np.ndarray:
 def fir_filter(signal: np.ndarray, coeffs: np.ndarray) -> np.ndarray:
     return np.convolve(signal.astype(np.float64, copy=False), coeffs, mode="same")
 
-# === FUNÇÃO FINAL P/ USAR NO SERVIDOR ===
-#def processar_pdm(bits):
-#    pdm = 2*bits.astype(np.int8) - 1          # -1/+1
-#    cic_out = cic_filter(pdm, R, N, M)
-#    fir_out = fir_filter(cic_out, fir_coeffs) # resultado final
-#    return fir_out
-
 def processar_pdm(sinal_pdm: np.ndarray) -> np.ndarray:
     """
     Entrada: sinal PDM já bipolar (-1/+1), tipo int8/int16/float.
