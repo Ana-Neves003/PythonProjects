@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>FFT em tempo real</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!--
+  <style>
+    body { background: #121212; color: white; text-align: center; font-family: Arial; }
+    canvas { width: 90%; height: 60vh; margin-top: 20px; }
+  </style>
+  -->
+  <style>
+    body {
+      background-color: #d9d9d9; 
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .linha {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px; /* espaço entre os gráficos */
+    }
+
+    .grafico-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* margin: 10px 0; */
+    }
+
+    canvas {
+      background-color: #ffffff;
+      border: 1px solid #888;
+      border-radius: 6px;
+      width: 600px;   
+      height: 300px;
+    }
+
+    button {
+      margin-top: 6px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: #007acc;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="linha">
+    <div class="grafico-container">
+      <canvas id="grafico1"></canvas>
+      <button onclick="baixarBruto()">Baixar sinal bruto (.raw)</button>
+    </div>
+
+    <div class="grafico-container">
+      <canvas id="grafico2"></canvas>
+      <button onclick="baixarFiltrado()">Baixar sinal filtrado (.raw)</button>
+    </div>
+  </div>
+
+  <script>
+
+    const ctx1 = document.getElementById('grafico1').getContext('2d');
+    const ctx2 = document.getElementById('grafico2').getContext('2d');
+
+    const chart1 = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'FFT (sinal bruto)',
+          data: [],
+          borderColor: 'blue',
+          borderWidth: 1,
+          pointRadius: 0,
+        }]
+      },
+      options: {
+        responsive: false,
+        animation: false,
+        scales: {
+          x: { type: 'logarithmic', title: { display: true, text: 'Frequência (Hz)' } },
+          y: { title: { display: true, text: 'Magnitude' } }
+          
+          /*
+          x: { title: { display: true, text: 'Frequência (Hz)' } },
+          y: { title: { display: true, text: 'Magnitude (dB)' } }
+          */
+        }
+      }
+    });
+
+    /*const ctx2 = document.getElementById('grafico2').getContext('2d');*/
+    const chart2 = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'FFT (filtrado)',
+          data: [],
+          borderColor: 'red',
+          borderWidth: 1,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: false,
+        animation: false,
+        scales: {
+          x: { type: 'logarithmic', title: { display: true, text: 'Frequência (Hz)' } },
+          y: { title: { display: true, text: 'Magnitude' } }
+        }
+      }
+    });
+
+    async function atualizar() {
+      const resp = await fetch('/dados_fft');
+      if (!resp.ok) return;
+      //const { freq, spec } = await resp.json();
+      const data = await resp.json();
+
+      // Armazena dados acumulados para download
+      acumuladoBruto.push(...data.spec_bruto);
+      acumuladoFiltrado.push(...data.spec_filtrado);
+
+
+      // Verifica se há dados
+
+      if (!data.freq_bruto?.length || !data.freq_filtrado?.length) return;
+
+      // Gráfico 1 - bruto
+      //chart1.data.labels = data.freq_bruto;
+      //chart1.data.datasets[0].data = data.spec_bruto;
+      //chart1.update();
+
+      if (!chart1.data.datasets[0].data.length) {
+        chart1.data.labels = data.freq_bruto;
+        chart1.data.datasets[0].data = data.spec_bruto;
+      } 
+      else {
+        for (let i = 0; i < data.spec_bruto.length; i++) {
+          chart1.data.datasets[0].data[i] = Math.max(
+          chart1.data.datasets[0].data[i],
+          data.spec_bruto[i]
+          );
+          
+        }
+      }
+
+      chart1.update();
+      //---------------------------------------------------------------------------------------
+
+      // Gráfico 2 - filtrado
+      //chart2.data.labels = data.freq_filtrado;
+      //chart2.data.datasets[0].data = data.spec_filtrado;
+      //chart2.update();
+
+      if (!chart2.data.datasets[0].data.length) {
+        chart2.data.labels = data.freq_filtrado;
+        chart2.data.datasets[0].data = data.spec_filtrado;
+      } 
+      else {
+        for (let i = 0; i < data.spec_filtrado.length; i++) {
+          chart2.data.datasets[0].data[i] = Math.max(
+          chart2.data.datasets[0].data[i],
+          data.spec_filtrado[i]
+          );
+          
+        }
+      }
+
+      chart2.update();
+
+    }
+
+    setInterval(atualizar, 1000);
+
+    // Armazena dados acumulados localmente
+    let acumuladoBruto = [];
+    let acumuladoFiltrado = [];
+
+    // Botões de download
+    async function baixarBruto() {
+      const resp = await fetch('/dados_brutos');
+      if (!resp.ok) {
+        alert("Erro ao obter sinal bruto!");
+        return;
+      }
+
+      const data = await resp.json();
+
+      const buffer = new Float32Array(data.amostras);
+      const blob = new Blob([buffer.buffer], { type: 'application/octet-stream' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'sinal_bruto.raw';
+      link.click();
+    }
+
+    async function baixarFiltrado() {
+      const resp = await fetch('/dados_filtrados');
+      
+      if (!resp.ok) {
+        alert("Erro ao obter sinal filtrado!");
+      return;
+      }
+
+      const data = await resp.json();
+
+      const buffer = new Float32Array(data.amostras);
+      const blob = new Blob([buffer.buffer], { type: 'application/octet-stream' });
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'sinal_filtrado.raw';
+      link.click();
+    }
+
+  </script>
+
+</body>
+</html>
